@@ -264,34 +264,32 @@ rewritten in this form:
 (As a reminder: A factorizer produces the factorizing function from a
 candidate.)
 
-In non-functional languages, like C++, currying is possible but
-nontrivial. You can think of multi-argument functions in C++ as
+In non-functional languages, like C\#, currying is possible but
+nontrivial. You can think of multi-argument methods in C\# as
 corresponding to Haskell functions taking tuples (although, to confuse
-things even more, in C++ you can define functions that take an explicit
-\code{std::tuple}, as well as variadic functions, and functions taking
-initializer lists).
+things even more, in C\# you can define methods that take an explicit
+tuple, as well as \code{params} variadic methods, and methods taking
+collection expressions).
 
-You can partially apply a C++ function using the template
-\code{std::bind}. For instance, given a function of two strings:
+You can partially apply a C\# function by capturing arguments in a
+lambda. For instance, given a function of two strings:
 
-\begin{snip}{cpp}
-std::string catstr(std::string s1, std::string s2) {
+\begin{snip}{csharp}
+string catstr(string s1, string s2) {
     return s1 + s2;
 }
 \end{snip}
 you can define a function of one string:
 
-\begin{snip}{cpp}
-using namespace std::placeholders;
-
-auto greet = std::bind(catstr, "Hello ", _1);
-std::cout << greet("Haskell Curry");
+\begin{snip}{csharp}
+Func<string, string> greet = s => catstr("Hello ", s);
+Console.Write(greet("Haskell Curry"));
 \end{snip}
-Scala, which is more functional than C++ or Java, falls somewhere in
+Scala, which is more functional than C\# or Java, falls somewhere in
 between. If you anticipate that the function you're defining will be
 partially applied, you define it with multiple argument lists:
 
-\begin{snip}{cpp}
+\begin{snip}{scala}
 def catstr(s1: String)(s2: String) = s1 + s2
 \end{snip}
 Of course that requires some amount of foresight or prescience on the
@@ -323,24 +321,25 @@ from \code{Bool} to, say, \code{Int} is the set of all pairs of
 \code{Int}s. This is the same as the product \code{Int} \times{} \code{Int} or,
 being a little creative with notation, \code{Int}\textsuperscript{2}.
 
-For another example, let's look at the C++ type \code{char}, which
+For another example, let's look at the C\# type \code{byte}, which
 contains 256 values (Haskell \code{Char} is larger, because Haskell
-uses Unicode). There are several functions in the part of the
-C++ Standard Library that are usually implemented using lookups.
-Functions like \code{isupper} or \code{isspace} are implemented
-using tables, which are equivalent to tuples of 256 Boolean values. A
+uses Unicode). Many character-classification predicates, restricted to
+the 256 code points that fit in a byte, are usually implemented using
+lookups. Functions like \code{Char.IsUpper} or \code{Char.IsWhiteSpace}
+correspond to tables, which are equivalent to tuples of 256 Boolean
+values. A
 tuple is a product type, so we are dealing with products of 256
 Booleans: \code{bool \times{} bool \times{} bool \times{} ... \times{} bool}. We know from
 arithmetics that an iterated product defines a power. If you
-``multiply'' \code{bool} by itself 256 (or \code{char}) times, you
-get \code{bool} to the power of \code{char}, or \code{bool}\textsuperscript{\code{char}}.
+``multiply'' \code{bool} by itself 256 (or \code{byte}) times, you
+get \code{bool} to the power of \code{byte}, or \code{bool}\textsuperscript{\code{byte}}.
 
 How many values are there in the type defined as 256-tuples of
 \code{bool}? Exactly $2^{256}$. This is also the number
-of different functions from \code{char} to \code{bool}, each
+of different functions from \code{byte} to \code{bool}, each
 function corresponding to a unique 256-tuple. You can similarly
 calculate that the number of functions from \code{bool} to
-\code{char} is $256^{2}$, and so on. The exponential
+\code{byte} is $256^{2}$, and so on. The exponential
 notation for function types makes perfect sense in these cases.
 
 We probably wouldn't want to fully memoize a function from \code{int}

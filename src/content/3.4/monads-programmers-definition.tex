@@ -52,15 +52,14 @@ of programming in terms of function composition. This is understandable.
 We often give names to intermediate values rather than pass them
 directly from function to function. We also inline short segments of
 glue code rather than abstract them into helper functions. Here's an
-imperative-style implementation of the vector-length function in C:
+imperative-style implementation of the vector-length function in C\#:
 
-\begin{snip}{cpp}
-double vlen(double * v) {
+\begin{snip}{csharp}
+double vlen(double[] v) {
     double d = 0.0;
-    int n;
-    for (n = 0; n < 3; ++n)
+    for (int n = 0; n < 3; ++n)
         d += v[n] * v[n];
-    return sqrt(d);
+    return Math.Sqrt(d);
 }
 \end{snip}
 Compare this with the (stylized) Haskell version that makes function
@@ -308,18 +307,19 @@ property can be used to introduce complex control structures, for
 instance to simulate exceptions.
 
 Interestingly, the equivalent of the \code{do} notation has found its
-application in imperative languages, C++ in particular. I'm talking
-about resumable functions or coroutines. It's not a secret that C++
+application in imperative languages, including C\#. I'm talking
+about resumable functions or coroutines. It's not a secret that
 \urlref{https://bartoszmilewski.com/2014/02/26/c17-i-see-a-monad-in-your-future/}{futures
   form a monad}. It's an example of the continuation monad, which we'll
 discuss shortly. The problem with continuations is that they are very
 hard to compose. In Haskell, we use the \code{do} notation to turn the
 spaghetti of ``my handler will call your handler'' into something that
-looks very much like sequential code. Resumable functions make the same
-transformation possible in C++. And the same mechanism can be applied to
+looks very much like sequential code. C\#'s \code{async}/\code{await}
+makes the same transformation possible. And the same mechanism can be applied to
 turn the
 \urlref{https://bartoszmilewski.com/2014/04/21/getting-lazy-with-c/}{spaghetti
-  of nested loops} into list comprehensions or ``generators,'' which are
+  of nested loops} into list comprehensions or ``generators'' (in C\#,
+\code{yield return}), which are
 essentially the \code{do} notation for the list monad. Without the
 unifying abstraction of the monad, each of these problems is typically
 addressed by providing custom extensions to the language. In Haskell,

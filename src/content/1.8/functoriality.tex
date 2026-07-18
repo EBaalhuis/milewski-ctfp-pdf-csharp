@@ -277,82 +277,73 @@ own typeclasses, but that's a bit more advanced. The idea though is the
 same: You provide the behavior for the basic building blocks and sums
 and products, and let the compiler figure out the rest.
 
-\section{Functors in C++}
+\section{Functors in C\#}
 
-If you are a C++ programmer, you obviously are on your own as far as
+If you are a C\# programmer, you obviously are on your own as far as
 implementing functors goes. However, you should be able to recognize
-some types of algebraic data structures in C++. If such a data structure
-is made into a generic template, you should be able to quickly implement
+some types of algebraic data structures in C\#. If such a data structure
+is made into a generic class, you should be able to quickly implement
 \code{fmap} for it.
 
 Let's have a look at a tree data structure, which we would define in
 Haskell as a recursive sum type:
 
 \src{snippet14}
-As I mentioned before, one way of implementing sum types in C++ is
+As I mentioned before, one way of implementing sum types in C\# is
 through class hierarchies. It would be natural, in an object-oriented
-language, to implement \code{fmap} as a virtual function of the base
+language, to implement \code{fmap} as a virtual method of the base
 class \code{Functor} and then override it in all subclasses.
-Unfortunately this is impossible because \code{fmap} is a template,
+Unfortunately this is impossible because \code{fmap} is generic,
 parameterized not only by the type of the object it's acting upon (the
-\code{this} pointer) but also by the return type of the function
-that's been applied to it. Virtual functions cannot be templatized in
-C++. We'll implement \code{fmap} as a generic free function, and we'll
-replace pattern matching with \code{dynamic\_cast}.
+\code{this} reference) but also by the return type of the function
+that's been applied to it. A virtual method cannot introduce its own
+type parameter for the result type in
+C\#. We'll implement \code{fmap} as a generic free method, and we'll
+replace pattern matching with type tests using the \code{is} operator.
 
-The base class must define at least one virtual function in order to
-support dynamic casting, so we'll make the destructor virtual (which is
-a good idea in any case):
+The base class just serves as the common ancestor; the runtime type of
+each object is always available for pattern matching:
 
-\begin{snip}{cpp}
-template<typename T>
-struct Tree { 
-    virtual ~Tree() {}
-};
+\begin{snip}{csharp}
+abstract class Tree<T> { }
 \end{snip}
 The \code{Leaf} is just an \code{Identity} functor in disguise:
 
-\begin{snip}{cpp}
-template<typename T>
-struct Leaf : public Tree<T> {
-    T _label;
-    Leaf(T l) : _label(l) {}
-};
+\begin{snip}{csharp}
+class Leaf<T> : Tree<T> {
+    public T _label;
+    public Leaf(T l) { _label = l; }
+}
 \end{snip}
 The \code{Node} is a product type:
 
-\begin{snip}{cpp}
-template<typename T>
-struct Node : public Tree<T> {
-    Tree<T> * _left;
-    Tree<T> * _right;
-    Node(Tree<T> * l, Tree<T> * r) : _left(l), _right(r) {}
-};
+\begin{snip}{csharp}
+class Node<T> : Tree<T> {
+    public Tree<T> _left;
+    public Tree<T> _right;
+    public Node(Tree<T> l, Tree<T> r) { _left = l; _right = r; }
+}
 \end{snip}
 When implementing \code{fmap} we take advantage of dynamic dispatching
 on the type of the \code{Tree}. The \code{Leaf} case applies the
 \code{Identity} version of \code{fmap}, and the \code{Node} case
 is treated like a bifunctor composed with two copies of the
-\code{Tree} functor. As a C++ programmer, you're probably not used to
+\code{Tree} functor. As a C\# programmer, you're probably not used to
 analyzing code in these terms, but it's a good exercise in categorical
 thinking.
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-Tree<B> * fmap(std::function<B(A)> f, Tree<A> * t) {
-    Leaf<A> * pl = dynamic_cast <Leaf<A>*>(t);
-    if (pl)
-        return new Leaf<B>(f (pl->_label));
-    Node<A> * pn = dynamic_cast<Node<A>*>(t);
-    if (pn)
-        return new Node<B>( fmap<A>(f, pn->_left)
-                          , fmap<A>(f, pn->_right));
-    return nullptr;
+\begin{snip}{csharp}
+Tree<B> fmap<A, B>(Func<A, B> f, Tree<A> t) {
+    if (t is Leaf<A> pl)
+        return new Leaf<B>(f(pl._label));
+    if (t is Node<A> pn)
+        return new Node<B>(fmap(f, pn._left),
+                           fmap(f, pn._right));
+    return null;
 }
 \end{snip}
-For simplicity, I decided to ignore memory and resource management
-issues, but in production code you would probably use smart pointers
-(unique or shared, depending on your policy).
+In C\#, object lifetimes are handled by the garbage collector, so there
+are no memory-management concerns to worry about here.
 
 Compare it with the Haskell implementation of \code{fmap}:
 
@@ -633,7 +624,7 @@ data Snd a b = Snd b
         Define a bifunctor in a language other than Haskell. Implement
         \code{bimap} for a generic pair in that language.
   \item
-        Should \code{std::map} be considered a bifunctor or a profunctor in
-        the two template arguments \code{Key} and \code{T}? How would you
+        Should \code{Dictionary} be considered a bifunctor or a profunctor in
+        the two type arguments \code{TKey} and \code{TValue}? How would you
         redesign this data type to make it so?
 \end{enumerate}

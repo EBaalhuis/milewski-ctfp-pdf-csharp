@@ -69,7 +69,7 @@ negative, with less-than-or-equal relation for morphisms.
 
 In the category of sets and functions, the initial object is the empty
 set. Remember, an empty set corresponds to the Haskell type
-\code{Void} (there is no corresponding type in C++) and the unique
+\code{Void} (there is no corresponding type in C\#) and the unique
 polymorphic function from \code{Void} to any other type is called
 \code{absurd}:
 
@@ -102,8 +102,8 @@ will show shortly. But first let's look at some examples. In a poset,
 the terminal object, if it exists, is the biggest object. In the
 category of sets, the terminal object is a singleton. We've already
 talked about singletons --- they correspond to the \code{void} type in
-C++ and the unit type \code{()} in Haskell. It's a type that has only
-one value --- implicit in C++ and explicit in Haskell, denoted by
+C\# and the unit type \code{()} in Haskell. It's a type that has only
+one value --- implicit in C\# and explicit in Haskell, denoted by
 \code{()}. We've also established that there is one and only one pure
 function from any type to the unit type:
 
@@ -241,12 +241,11 @@ These definitions can be simplified even further with the use of
 wildcards:
 
 \src{snippet08}
-In C++, we would use template functions, for instance:
+In C\#, we would use generic methods, for instance:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-A fst(pair<A, B> const & p) {
-    return p.first;
+\begin{snip}{csharp}
+A fst<A, B>((A, B) p) {
+    return p.Item1;
 }
 \end{snip}
 Equipped with this seemingly very limited knowledge, let's try to define
@@ -437,36 +436,37 @@ can think of an element of a disjoint union as being tagged with an
 identifier that specifies its origin.
 
 For a programmer, it's easier to understand a coproduct in terms of
-types: it's a tagged union of two types. C++ supports unions, but they
-are not tagged. It means that in your program you have to somehow keep
-track which member of the union is valid. To create a tagged union, you
-have to define a tag --- an enumeration --- and combine it with the
-union. For instance, a tagged union of an \code{int} and a
-\code{char const *} could be implemented as:
+types: it's a tagged union of two types. C\# doesn't provide untagged
+unions, so you typically combine a tag --- an enumeration --- with the
+alternative fields, and keep track of which one is valid. For instance, a
+tagged union of an \code{int} and a \code{string} could be implemented
+as:
 
-\begin{snip}{cpp}
+\begin{snip}{csharp}
 struct Contact {
-    enum { isPhone, isEmail } tag;
-    union { int phoneNum; char const * emailAddr; };
-};
+    public enum Kind { IsPhone, IsEmail }
+    public Kind Tag;
+    public int PhoneNum;
+    public string EmailAddr;
+}
 \end{snip}
 The two injections can either be implemented as constructors or as
 functions. For instance, here's the first injection as a function
 \code{PhoneNum}:
 
-\begin{snip}{cpp}
+\begin{snip}{csharp}
 Contact PhoneNum(int n) {
-    Contact c;
-    c.tag = isPhone;
-    c.phoneNum = n;
-    return c;
+    return new Contact {
+        Tag = Contact.Kind.IsPhone,
+        PhoneNum = n
+    };
 }
 \end{snip}
 It injects an integer into \code{Contact}.
 
-A tagged union is also called a \newterm{variant}, and there is a very
-general implementation of a variant in the C++17 standard,
-\code{std::variant}.
+A tagged union is also called a \newterm{variant}. C\# does not have a
+built-in variant type, but third-party libraries such as \code{OneOf}
+provide a general implementation.
 
 In Haskell, you can combine any data types into a tagged union by
 separating data constructors with a vertical bar. The \code{Contact}
@@ -603,15 +603,15 @@ isomorphism is the same as a bijection.
         Show that \code{Either} is a ``better'' coproduct than \code{int}
         equipped with two injections:
 
-        \begin{snip}{cpp}
+        \begin{snip}{csharp}
 int i(int n) { return n; }
-int j(bool b) { return b ? 0: 1; }
+int j(bool b) { return b ? 0 : 1; }
 \end{snip}
 
         Hint: Define a function
 
-        \begin{snip}{cpp}
-int m(Either const & e);
+        \begin{snip}{csharp}
+int m(Either<int, bool> e);
 \end{snip}
 
         that factorizes \code{i} and \code{j}.
@@ -622,13 +622,13 @@ int m(Either const & e);
   \item
         Still continuing: What about these injections?
 
-        \begin{snip}{cpp}
+        \begin{snip}{csharp}
 int i(int n) {
     if (n < 0) return n;
     return n + 2;
 }
 
-int j(bool b) { return b ? 0: 1; }
+int j(bool b) { return b ? 0 : 1; }
 \end{snip}
   \item
         Come up with an inferior candidate for a coproduct of \code{int} and

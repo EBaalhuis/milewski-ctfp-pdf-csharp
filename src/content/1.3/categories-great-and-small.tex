@@ -123,7 +123,7 @@ properties of \code{mempty} and \code{mappend} (i.e., the fact that
 It's the responsibility of the programmer to make sure they are
 satisfied.
 
-Haskell classes are not as intrusive as C++ classes. When you're
+Haskell classes are not as intrusive as C\# classes. When you're
 defining a new type, you don't have to specify its class up front. You
 are free to procrastinate and declare a given type to be an instance of
 some class much later. As an example, let's declare \code{String} to
@@ -176,44 +176,38 @@ is described as \newterm{point-free}. (Incidentally, point-free equations
 often involve composition of functions, which is symbolized by a point,
 so this might be a little confusing to the beginner.)
 
-The closest one can get to declaring a monoid in C++ would be to use the
-C++20 standard's concept feature.
+The closest one can get to declaring a monoid in C\# would be to use an
+interface with static abstract members.
 
-\begin{snip}{cpp}
-template<typename T>
-struct mempty;
-
-template<typename T>
-T mappend(T, T) = delete;
-
-template<typename M>
-concept Monoid = requires (M m) {
-    { mempty<M>::value() } -> std::same_as<M>;
-    { mappend(m, m) } -> std::same_as<M>;
-};
+\begin{snip}{csharp}
+interface IMonoid<M> where M : IMonoid<M>
+{
+    static abstract M MEmpty { get; }
+    static abstract M MAppend(M a, M b);
+}
 \end{snip}
-The first definition is a structure meant to hold the neutral element for each
-specialization.
+The \code{MEmpty} property is meant to hold the neutral element for each
+implementing type.
 
-The keyword \code{delete} means that there is no default value
-defined: It will have to be specified on a case-by-case basis.
-Similarly, there is no default for \code{mappend}.
+Because both members are declared \code{abstract}, there are no
+defaults: they will have to be specified on a case-by-case basis by
+every type that claims to be a monoid.
 
-The concept \code{Monoid} tests whether there exist appropriate definitions of
-\code{mempty} and \code{mappend} for a given type \code{M}.
+The interface \code{IMonoid} demands appropriate definitions of
+\code{MEmpty} and \code{MAppend} for a given type \code{M}.
 
-An instantiation of the Monoid concept can be accomplished by providing
-appropriate specializations and overloads:
+An implementation of the \code{IMonoid} interface can be accomplished by
+having a type provide the required members:
 
-\begin{snip}{cpp}
-template<>
-struct mempty<std::string> {
-    static std::string value() { return ""; }
-};
+\begin{snip}{csharp}
+readonly struct Concat : IMonoid<Concat>
+{
+    public string Value { get; }
+    public Concat(string value) => Value = value;
 
-template<>
-std::string mappend(std::string s1, std::string s2) {
-    return s1 + s2;
+    public static Concat MEmpty => new Concat("");
+    public static Concat MAppend(Concat a, Concat b) =>
+        new Concat(a.Value + b.Value);
 }
 \end{snip}
 
@@ -336,9 +330,9 @@ set $\cat{M}(m, m)$.
                 A set of sets with the inclusion relation: $A$ is included in $B$ if
                 every element of $A$ is also an element of $B$.
           \item
-                C++ types with the following subtyping relation: \code{T1} is a subtype of
-                \code{T2} if a pointer to \code{T1} can be passed to a function that expects a
-                pointer to \code{T2} without triggering a compilation error.
+                C\# types with the following subtyping relation: \code{T1} is a subtype of
+                \code{T2} if a reference to \code{T1} can be passed to a method that expects a
+                reference to \code{T2} without triggering a compilation error.
         \end{enumerate}
   \item
         Considering that \code{Bool} is a set of two values \code{True} and \code{False}, show that

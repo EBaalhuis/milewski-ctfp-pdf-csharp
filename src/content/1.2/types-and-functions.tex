@@ -60,10 +60,10 @@ and we all know how it ends.
 
 Another argument I hear a lot is that dealing with types imposes too
 much burden on the programmer. I could sympathize with this sentiment
-after having to write a few declarations of iterators in C++ myself,
+after having to write a few declarations of iterators in C\# myself,
 except that there is a technology called \newterm{type inference} that lets
 the compiler deduce most of the types from the context in which they are
-used. In C++, you can now declare a variable \code{auto} and let the
+used. In C\#, you can now declare a variable \code{var} and let the
 compiler figure out its type.
 
 In Haskell, except on rare occasions, type annotations are purely
@@ -114,7 +114,7 @@ When we declare \code{x} to be an \code{Integer}:
 we are saying that it's an element of the set of integers.
 \code{Integer} in Haskell is an infinite set, and it can be used to do
 arbitrary precision arithmetic. There is also a finite-set \code{Int}
-that corresponds to machine type, just like the C++ \code{int}.
+that corresponds to machine type, just like the C\# \code{int}.
 
 There are some subtleties that make this identification of types and
 sets tricky. There are problems with polymorphic functions that involve
@@ -197,7 +197,7 @@ because of their complexity, they are mostly used with simplified
 academic languages, not real-life programming behemoths. One such tool
 called \newterm{operational semantics} describes the mechanics of program
 execution. It defines a formalized idealized interpreter. The semantics
-of industrial languages, such as C++, is usually described using
+of industrial languages, such as C\#, is usually described using
 informal operational reasoning, often in terms of an ``abstract
 machine.''
 
@@ -234,13 +234,12 @@ language quite amenable to denotational semantics:
 The expression \code{{[}1..n{]}} is a list of integers from \code{1} to \code{n}.
 The function \code{product} multiplies all elements of a list. That's
 just like a definition of factorial taken from a math text. Compare this
-with C:
+with C\#:
 
-\begin{snip}{c}
+\begin{snip}{csharp}
 int fact(int n) {
-    int i;
     int result = 1;
-    for (i = 2; i <= n; ++i)
+    for (int i = 2; i <= n; ++i)
         result *= i;
     return result;
 }
@@ -274,7 +273,7 @@ standard library come with proofs of correctness.
 
 \section{Pure and Dirty Functions}
 
-The things we call functions in C++ or any other imperative language,
+The things we call functions in C\# or any other imperative language,
 are not the same things mathematicians call functions. A mathematical
 function is just a mapping of values to values.
 
@@ -304,7 +303,7 @@ anything by restricting ourselves to mathematical functions.
 
 Once you realize that types are sets, you can think of some rather
 exotic types. For instance, what's the type corresponding to an empty
-set? No, it's not C++ \code{void}, although this type \emph{is} called
+set? No, it's not C\# \code{void}, although this type \emph{is} called
 \code{Void} in Haskell. It's a type that's not inhabited by any
 values. You can define a function that takes \code{Void}, but you can
 never call it. To call it, you would have to provide a value of the type
@@ -324,12 +323,12 @@ anything, as in the Latin adage ``ex falso sequitur quodlibet.''
 
 Next is the type that corresponds to a singleton set. It's a type that
 has only one possible value. This value just ``is.'' You might not
-immediately recognize it as such, but that is the C++ \code{void}.
+immediately recognize it as such, but that is the C\# \code{void}.
 Think of functions from and to this type. A function from \code{void}
 can always be called. If it's a pure function, it will always return the
 same result. Here's an example of such a function:
 
-\begin{snip}{c}
+\begin{snip}{csharp}
 int f44() { return 44; }
 \end{snip}
 You might think of this function as taking ``nothing'', but as we've
@@ -339,7 +338,7 @@ take? Conceptually, it takes a dummy value of which there is only one
 instance ever, so we don't have to mention it explicitly. In Haskell,
 however, there is a symbol for this value: an empty pair of parentheses,
 \code{()}. So, by a funny coincidence (or is it a coincidence?), the
-call to a function of void looks the same in C++ and in Haskell. Also,
+call to a function of void looks the same in C\# and in Haskell. Also,
 because of the Haskell's love of terseness, the same symbol \code{()}
 is used for the type, the constructor, and the only value corresponding
 to a singleton set. So here's this function in Haskell:
@@ -351,7 +350,7 @@ defines \code{f44} by pattern matching the only constructor for unit,
 namely \code{()}, and producing the number 44. You call this function
 by providing the unit value \code{()}:
 
-\begin{snip}{c}
+\begin{snip}{haskell}
 f44 ()
 \end{snip}
 Notice that every function of unit is equivalent to picking a single
@@ -363,7 +362,7 @@ Functions from unit to any type $A$ are in one-to-one correspondence with
 the elements of that set $A$.
 
 What about functions with the \code{void} return type, or, in Haskell,
-with the unit return type? In C++ such functions are used for side
+with the unit return type? In C\# such functions are used for side
 effects, but we know that these are not real functions in the
 mathematical sense of the word. A pure function that returns unit does
 nothing: it discards its argument.
@@ -391,44 +390,40 @@ concrete type. What should we call a polymorphic function from any type
 to unit type? Of course we'll call it \code{unit}:
 
 \src{snippet10}
-In C++ you would write this function as:
+In C\# you would write this method as:
 
-\begin{snip}{cpp}
-template<typename T>
-void unit(T) {}
+\begin{snip}{csharp}
+void Unit<T>(T _) { }
 \end{snip}
-Next in the typology of types is a two-element set. In C++ it's called
+Next in the typology of types is a two-element set. In C\# it's called
 \code{bool} and in Haskell, predictably, \code{Bool}. The difference
-is that in C++ \code{bool} is a built-in type, whereas in Haskell it
+is that in C\# \code{bool} is a built-in type, whereas in Haskell it
 can be defined as follows:
 
 \src{snippet11}
 (The way to read this definition is that \code{Bool} is either
 \code{True} or \code{False}.) In principle, one should also be able
-to define a Boolean type in C++ as an enumeration:
+to define a Boolean type in C\# as an enumeration:
 
-\begin{snip}{cpp}
-enum bool {
-    true,
-    false
-};
+\begin{snip}{csharp}
+enum Bool {
+    True,
+    False
+}
 \end{snip}
-but C++ \code{enum} is secretly an integer. The C++11
-``\code{enum class}'' could have been used instead, but then you
-would have to qualify its values with the class name, as in
-\code{bool::true} and \code{bool::false}, not to mention having to
-include the appropriate header in every file that uses it.
+but a C\# \code{enum} is secretly an integer, and its values must be
+qualified with the type name, as in \code{Bool.True} and
+\code{Bool.False}.
 
 Pure functions from \code{Bool} just pick two values from the target
 type, one corresponding to \code{True} and another to \code{False}.
 
 Functions to \code{Bool} are called \newterm{predicates}. For instance,
 the Haskell library \code{Data.Char} is full of predicates like
-\code{isAlpha} or \code{isDigit}. In C++ there is a similar library
-\code{} that defines, among others, \code{isalpha} and
-\code{isdigit}, but these return an \code{int} rather than a
-Boolean. The actual predicates are defined in \code{std::ctype} and
-have the form \code{ctype::is(alpha, c)}, \code{ctype::is(digit, c)}, etc.
+\code{isAlpha} or \code{isDigit}. In C\# the \code{System.Char} type
+provides similar predicates like \code{Char.IsLetter} and
+\code{Char.IsDigit}, and these return a proper \code{bool} rather than
+an integer.
 
 \section{Challenges}
 
@@ -455,7 +450,7 @@ have the form \code{ctype::is(alpha, c)}, \code{ctype::is(digit, c)}, etc.
         generator with that seed, and returns the result. Memoize that
         function. Does it work?
   \item
-        Which of these C++ functions are pure? Try to memoize them and observe
+        Which of these C\# functions are pure? Try to memoize them and observe
         what happens when you call them multiple times: memoized and not.
 
         \begin{enumerate}
@@ -463,20 +458,20 @@ have the form \code{ctype::is(alpha, c)}, \code{ctype::is(digit, c)}, etc.
           \item
                 The factorial function from the example in the text.
           \item
-                \begin{minted}{cpp}
-std::getchar()
+                \begin{minted}{csharp}
+Console.Read()
 \end{minted}
           \item
-                \begin{minted}{cpp}
-bool f() {
-    std::cout << "Hello!" << std::endl;
+                \begin{minted}{csharp}
+bool F() {
+    Console.WriteLine("Hello!");
     return true;
 }
 \end{minted}
           \item
-                \begin{minted}{cpp}
-int f(int x) {
-    static int y = 0;
+                \begin{minted}{csharp}
+static int y = 0;
+static int F(int x) {
     y += x;
     return y;
 }

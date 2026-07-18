@@ -229,16 +229,16 @@ And then the \code{Just} case:
 = { definition of composition }
   (fmap g . fmap f) (Just x)
 \end{snip}
-It's worth stressing that equational reasoning doesn't work for C++
+It's worth stressing that equational reasoning doesn't work for C\#
 style ``functions'' with side effects. Consider this code:
 
-\begin{snip}{cpp}
+\begin{snip}{csharp}
 int square(int x) {
     return x * x;
 }
 
+static int c = 0;
 int counter() {
-    static int c = 0;
     return c++;
 }
 
@@ -247,76 +247,70 @@ double y = square(counter());
 Using equational reasoning, you would be able to inline \code{square}
 to get:
 
-\begin{snip}{cpp}
+\begin{snip}{csharp}
 double y = counter() * counter();
 \end{snip}
 This is definitely not a valid transformation, and it will not produce
-the same result. Despite that, the C++ compiler will try to use
-equational reasoning if you implement \code{square} as a macro, with
-disastrous results.
+the same result. C\# doesn't have text-substitution macros that would
+perform this kind of inlining behind your back, but the same caution
+applies whenever a ``function'' hides side effects.
 
 \subsection{Optional}
 
 Functors are easily expressed in Haskell, but they can be defined in any
 language that supports generic programming and higher-order functions.
-Let's consider the C++ analog of \code{Maybe}, the template type
-\code{optional}. Here's a sketch of the implementation (the actual
-implementation is much more complex, dealing with various ways the
-argument may be passed, with copy semantics, and with the resource
-management issues characteristic of C++):
+Let's consider the C\# analog of \code{Maybe}, a generic type
+\code{Optional}. Here's a sketch of the implementation:
 
-\begin{snip}{cpp}
-template<typename T>
-class optional {
-    bool _isValid; // the tag
-    T _v;
-public:
-    optional()    : _isValid(false) {}        // Nothing
-    optional(T x) : _isValid(true) , _v(x) {} // Just
-    bool isValid() const { return _isValid; }
-    T val() const { return _v; } };
+\begin{snip}{csharp}
+class Optional<T> {
+    private readonly bool _isValid; // the tag
+    private readonly T _v;
+    public Optional() { _isValid = false; }            // Nothing
+    public Optional(T x) { _isValid = true; _v = x; }  // Just
+    public bool IsValid() => _isValid;
+    public T Val() => _v;
+}
 \end{snip}
-This template provides one part of the definition of a functor: the
+This generic type provides one part of the definition of a functor: the
 mapping of types. It maps any type \code{T} to a new type
-\code{optional<T>}. Let's define its action on
+\code{Optional<T>}. Let's define its action on
 functions:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-std::function<optional<B>(optional<A>)>
-fmap(std::function<B(A)> f) {
-    return [f](optional<A> opt) {
-        if (!opt.isValid())
-            return optional<B>{};
+\begin{snip}{csharp}
+Func<Optional<A>, Optional<B>> fmap<A, B>(Func<A, B> f) {
+    return opt => {
+        if (!opt.IsValid())
+            return new Optional<B>();
         else
-            return optional<B>{ f(opt.val()) };
+            return new Optional<B>(f(opt.Val()));
     };
 }
 \end{snip}
 This is a higher order function, taking a function as an argument and
 returning a function. Here's the uncurried version of it:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-optional<B> fmap(std::function<B(A)> f, optional<A> opt) {
-    if (!opt.isValid())
-        return optional<B>{};
+\begin{snip}{csharp}
+Optional<B> fmap<A, B>(Func<A, B> f, Optional<A> opt) {
+    if (!opt.IsValid())
+        return new Optional<B>();
     else
-        return optional<B>{ f(opt.val()) };
+        return new Optional<B>(f(opt.Val()));
 }
 \end{snip}
-There is also an option of making \code{fmap} a template method of
-\code{optional}. This embarrassment of choices makes abstracting the
-functor pattern in C++ a problem. Should functor be an interface to
-inherit from (unfortunately, you can't have template virtual functions)?
-Should it be a curried or an uncurried free template function? Can the
-C++ compiler correctly infer the missing types, or should they be
+There is also an option of making \code{fmap} an instance method of
+\code{Optional}. This embarrassment of choices makes abstracting the
+functor pattern in C\# a problem. Should functor be an interface to
+inherit from (unfortunately, you can't have a generic virtual method
+parameterized by the container type)? Should it be a curried or an
+uncurried free generic method? Can the
+C\# compiler correctly infer the missing types, or should they be
 specified explicitly? Consider a situation where the input function
 \code{f} takes an \code{int} to a \code{bool}. How will the
 compiler figure out the type of \code{g}:
 
-\begin{snip}{cpp}
-auto g = fmap(f);
+\begin{snip}{csharp}
+var g = fmap(f);
 \end{snip}
 especially if, in the future, there are multiple functors overloading
 \code{fmap}? (We'll see more functors soon.)
@@ -346,7 +340,7 @@ infix position between the two patterns \code{(Pt x y)} and
 \code{(Pt x' y')}. The body of the function follows the
 single equal sign. Once \code{Point} is declared an instance of
 \code{Eq}, you can directly compare points for equality. Notice that,
-unlike in C++ or Java, you don't have to specify the \code{Eq} class
+unlike in C\# or Java, you don't have to specify the \code{Eq} class
 (or interface) when defining \code{Point} --- you can do it later in
 client code. Typeclasses are also Haskell's only mechanism for
 overloading functions (and operators). We will need that for overloading
@@ -372,35 +366,34 @@ By the way, the \code{Functor} class, as well as its instance
 definitions for a lot of simple data types, including \code{Maybe},
 are part of the standard Prelude library.
 
-\subsection{Functor in C++}
+\subsection{Functor in C\#}
 
-Can we try the same approach in C++? A type constructor corresponds to a
-template class, like \code{optional}, so by analogy, we would
-parameterize \code{fmap} with a \newterm{template template parameter}
-\code{F}. This is the syntax for it:
+Can we try the same approach in C\#? A type constructor corresponds to a
+generic class, like \code{Optional}, so by analogy, we would like to
+parameterize \code{fmap} with a \newterm{higher-kinded type parameter}
+\code{F} --- something like this:
 
-\begin{snip}{cpp}
-template<template<typename> F, typename A, typename B>
-F<B> fmap(std::function<B(A)>, F<A>);
+\begin{snip}{csharp}
+F<B> fmap<F, A, B>(Func<A, B> f, F<A> x);
 \end{snip}
-We would like to be able to specialize this template for different
-functors. Unfortunately, there is a prohibition against partial
-specialization of template functions in C++. You can't write:
+Unfortunately, C\# has no higher-kinded types: a type parameter
+\code{F} cannot be used as a type constructor and applied to another
+type, as in \code{F<A>}. So there is no way to write a single generic
+\code{fmap} that works for every functor. You can't even name the
+functor as a type argument:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-optional<B> fmap<optional>(std::function<B(A)> f, optional<A> opt)
+\begin{snip}{csharp}
+Optional<B> fmap<Optional, A, B>(Func<A, B> f, Optional<A> opt);
 \end{snip}
-Instead, we have to fall back on function overloading, which brings us
+Instead, we have to fall back on method overloading, which brings us
 back to the original definition of the uncurried \code{fmap}:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-optional<B> fmap(std::function<B(A)> f, optional<A> opt) {
-    if (!opt.isValid())
-        return optional<B>{};
+\begin{snip}{csharp}
+Optional<B> fmap<A, B>(Func<A, B> f, Optional<A> opt) {
+    if (!opt.IsValid())
+        return new Optional<B>();
     else
-        return optional<B>{ f(opt.val()) };
+        return new Optional<B>(f(opt.Val()));
 }
 \end{snip}
 This definition works, but only because the second argument of
@@ -450,39 +443,28 @@ we combine the new head \code{(f x)} with the new tail
 all together, here's the instance declaration for the list functor:
 
 \src{snippet18}
-If you are more comfortable with C++, consider the case of a
-\code{std::vector}, which could be considered the most generic C++
-container. The implementation of \code{fmap} for \code{std::vector}
-is just a thin encapsulation of \code{std::transform}:
+If you are more comfortable with C\#, consider the case of a
+\code{List<T>}, which could be considered the most generic C\#
+container. The implementation of \code{fmap} for \code{List<T>}
+is just a thin encapsulation of LINQ's \code{Select}:
 
-\begin{snip}{cpp}
-template<typename A, typename B>
-std::vector<B> fmap(std::function<B(A)> f, std::vector<A> v) {
-    std::vector<B> w;
-    std::transform( std::begin(v)
-                  , std::end(v)
-                  , std::back_inserter(w)
-                  , f);
-    return w;
+\begin{snip}{csharp}
+List<B> fmap<A, B>(Func<A, B> f, List<A> v) {
+    return v.Select(f).ToList();
 }
 \end{snip}
 We can use it, for instance, to square the elements of a sequence of
 numbers:
 
-\begin{snip}{cpp}
-std::vector<int> v{ 1, 2, 3, 4 };
-auto w = fmap([](int i) { return i*i; }, v);
-std::copy( std::begin(w)
-         , std::end(w)
-         , std::ostream_iterator(std::cout, ", "));
+\begin{snip}{csharp}
+var v = new List<int> { 1, 2, 3, 4 };
+var w = fmap(i => i * i, v);
+Console.WriteLine(string.Join(", ", w));
 \end{snip}
-Most C++ containers are functors by virtue of implementing iterators
-that can be passed to \code{std::transform}, which is the more
-primitive cousin of \code{fmap}. Unfortunately, the simplicity of a
-functor is lost under the usual clutter of iterators and temporaries
-(see the implementation of \code{fmap} above). I'm happy to say that
-the new proposed C++ range library makes the functorial nature of ranges
-much more pronounced.
+Most C\# containers are functors by virtue of implementing
+\code{IEnumerable<T>}, which can be transformed with LINQ's
+\code{Select} --- the more primitive cousin of \code{fmap}. LINQ
+makes the functorial nature of sequences quite pronounced.
 
 \subsection{The Reader Functor}
 
@@ -572,8 +554,8 @@ possible states of the Universe, past, present, and future --- we can
 deal with it! So I like to think of the functor object (an object of the
 type generated by an endofunctor) as containing a value or values of the
 type over which it is parameterized, even if these values are not
-physically present there. One example of a functor is a C++
-\code{std::future}, which may at some point contain a value, but it's
+physically present there. One example of a functor is a C\#
+\code{Task<T>}, which may at some point contain a value, but it's
 not guaranteed it will; and if you want to access it, you may block
 waiting for another thread to finish execution. Another example is a
 Haskell \code{IO} object, which may contain user input, or the future
@@ -606,25 +588,23 @@ Because the functor ignores its type argument, the implementation of
 has nothing to act upon:
 
 \src{snippet28}
-This might be a little clearer in C++ (I never thought I would utter
+This might be a little clearer in C\# (I never thought I would utter
 those words!), where there is a stronger distinction between type
 arguments --- which are compile-time --- and values, which are run-time:
 
-\begin{snip}{cpp}
-template<typename C, typename A>
-struct Const {
-    Const(C v) : _v(v) {}
-    C _v;
-};
+\begin{snip}{csharp}
+struct Const<C, A> {
+    public Const(C v) { _v = v; }
+    public C _v;
+}
 \end{snip}
-The C++ implementation of \code{fmap} also ignores the function
+The C\# implementation of \code{fmap} also ignores the function
 argument and essentially re-casts the \code{Const} argument without
 changing its value:
 
-\begin{snip}{cpp}
-template<typename C, typename A, typename B>
-Const<C, B> fmap(std::function<B(A)> f, Const<C, A> c) {
-    return Const<C, B>{c._v};
+\begin{snip}{csharp}
+Const<C, B> fmap<C, A, B>(Func<A, B> f, Const<C, A> c) {
+    return new Const<C, B>(c._v);
 }
 \end{snip}
 Despite its weirdness, the \code{Const} functor plays an important

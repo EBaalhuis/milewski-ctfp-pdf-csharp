@@ -18,8 +18,7 @@ programming.
 
 The canonical implementation of a product of two types in a programming
 language is a pair. In Haskell, a pair is a primitive type constructor;
-in C++ it's a relatively complex template defined in the Standard
-Library.
+in C\# it's provided by the built-in value tuple types.
 
 \begin{figure}[H]
   \centering
@@ -204,28 +203,28 @@ a \code{Right} version of this type --- there isn't a value of type
 constructed using the \code{Left} constructors and they simply
 encapsulate a value of type \code{a}. So, symbolically, $a + 0 = a$.
 
-Sum types are pretty common in Haskell, but their C++ equivalents,
+Sum types are pretty common in Haskell, but their C\# equivalents,
 unions or variants, are much less common. There are several reasons for
 that.
 
 First of all, the simplest sum types are just enumerations and are
-implemented using \code{enum} in C++. The equivalent of the Haskell
+implemented using \code{enum} in C\#. The equivalent of the Haskell
 sum type:
 
 \src{snippet24}
-is the C++:
+is the C\#:
 
-\begin{snip}{cpp}
-enum { Red, Green, Blue };
+\begin{snip}{csharp}
+enum Color { Red, Green, Blue }
 \end{snip}
 An even simpler sum type:
 
 \src{snippet25}
-is the primitive \code{bool} in C++.
+is the primitive \code{bool} in C\#.
 
 Simple sum types that encode the presence or absence of a value are
-variously implemented in C++ using special tricks and ``impossible''
-values, like empty strings, negative numbers, null pointers, etc. This
+variously implemented in C\# using special tricks and ``impossible''
+values, like empty strings, negative numbers, null references, etc. This
 kind of optionality, if deliberate, is expressed in Haskell using the
 \code{Maybe} type:
 
@@ -244,34 +243,33 @@ is just an encapsulation of the type \code{a}. We could have encoded
 \code{Maybe} as:
 
 \src{snippet29}
-More complex sum types are often faked in C++ using pointers. A pointer
-can be either null, or point to a value of specific type. For instance,
+More complex sum types are often faked in C\# using references. A
+reference can be either null, or refer to a value of a specific type. For instance,
 a Haskell list type, which can be defined as a (recursive) sum type:
 
 \src{snippet30}
-can be translated to C++ using the null pointer trick to implement the
+can be translated to C\# using the null reference trick to implement the
 empty list:
 
-\begin{snip}{cpp}
-template<typename A>
-class List {
-    Node<A> * _head;
-public:
-    List() : _head(nullptr) {} // Nil
-    List(A a, List<A> l)       // Cons
-      : _head(new Node<A>(a, l))
-    {}
-};
+\begin{snip}{csharp}
+class List<A> {
+    Node<A> _head;
+    public List() { _head = null; }     // Nil
+    public List(A a, List<A> l)         // Cons
+    {
+        _head = new Node<A>(a, l);
+    }
+}
 \end{snip}
 Notice that the two Haskell constructors \code{Nil} and \code{Cons}
 are translated into two overloaded \code{List} constructors with
 analogous arguments (none, for \code{Nil}; and a value and a list for
 \code{Cons}). The \code{List} class doesn't need a tag to
 distinguish between the two components of the sum type. Instead it uses
-the special \code{nullptr} value for \code{\_head} to encode
+the special \code{null} value for \code{\_head} to encode
 \code{Nil}.
 
-The main difference, though, between Haskell and C++ types is that
+The main difference, though, between Haskell and C\# types is that
 Haskell data structures are immutable. If you create an object using one
 particular constructor, the object will forever remember which
 constructor was used and what arguments were passed to it. So a
@@ -305,16 +303,16 @@ depending on how your \code{List} was created, it will match one of
 the clauses. If it was created using \code{Cons}, the two arguments
 that were passed to it will be retrieved (and the first discarded).
 
-Even more elaborate sum types are implemented in C++ using polymorphic
+Even more elaborate sum types are implemented in C\# using polymorphic
 class hierarchies. A family of classes with a common ancestor may be
-understood as one variant type, in which the vtable serves as a hidden
-tag. What in Haskell would be done by pattern matching on the
-constructor, and by calling specialized code, in C++ is accomplished by
-dispatching a call to a virtual function based on the vtable pointer.
+understood as one variant type, in which the runtime type serves as a
+hidden tag. What in Haskell would be done by pattern matching on the
+constructor, and by calling specialized code, in C\# is accomplished by
+dispatching a call to a virtual method based on the object's runtime
+type.
 
-You will rarely see \code{union} used as a sum type in C++ because of
-severe limitations on what can go into a union. You can't even put a
-\code{std::string} into a union because it has a copy constructor.
+C\# has no built-in \code{union} type at all, so this class-hierarchy
+approach (or a library variant type) is the usual way to encode a sum.
 
 \section{Algebra of Types}
 
@@ -483,7 +481,7 @@ area :: Shape -> Float
 area (Circle r) = pi * r * r
 area (Rect d h) = d * h
 \end{snip}
-        Implement \code{Shape} in C++ or Java as an interface and create two
+        Implement \code{Shape} in C\# or Java as an interface and create two
         classes: \code{Circle} and \code{Rect}. Implement \code{area} as
         a virtual function.
   \item
@@ -496,12 +494,12 @@ circ :: Shape -> Float
 circ (Circle r) = 2.0 * pi * r
 circ (Rect d h) = 2.0 * (d + h)
 \end{snip}
-        Add \code{circ} to your C++ or Java implementation. What parts of
+        Add \code{circ} to your C\# or Java implementation. What parts of
         the original code did you have to touch?
   \item
         Continuing further: Add a new shape, \code{Square}, to
         \code{Shape} and make all the necessary updates. What code did you
-        have to touch in Haskell vs. C++ or Java? (Even if you're not a
+        have to touch in Haskell vs. C\# or Java? (Even if you're not a
         Haskell programmer, the modifications should be pretty obvious.)
   \item
         Show that $a + a = 2 \times a$ holds for types (up to
